@@ -8,7 +8,7 @@ services:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
     image: ollama/ollama
-    hostname: ollama.shared
+    hostname: ollama
     deploy:
       resources:
         reservations:
@@ -29,7 +29,7 @@ services:
       options:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
-    hostname: searxng.shared
+    hostname: searxng
     expose:
       - "${SEARXNG_PORT}"
     volumes:
@@ -60,7 +60,7 @@ services:
   redis:
     image: redis:7.2-alpine
     # container_name: redis_cache
-    hostname: redis.shared
+    hostname: redis
     logging:
       driver: ${LOGGER_DRIVER}
       options:
