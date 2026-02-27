@@ -1,0 +1,109 @@
+# docker-compose.prod.yaml
+# docker compose -f docker-compose.xeon.yaml up -d --build
+services:
+  ollama:
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    image: ollama/ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      ollama_network:
+        ipv4_address: ${IP_OLLAMA}
+
+  searxng:
+    image: searxng/searxng:latest
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    expose:
+      - "${SEARXNG_PORT}"
+    volumes:
+      - ./searxng-config:/etc/searxng:rw,z
+      - searxng-data:/var/cache/searxng
+    environment:
+      # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}  # базовый url
+      - SEARXNG_PORT=${SEARXNG_PORT}
+      - SEARXNG_BIND_ADDRESS=0.0.0.0
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      searxng_network:
+        ipv4_address: ${IP_SEARXNG}
+
+  redis:
+    image: redis:7.2-alpine
+    # container_name: redis_cache
+    # hostname: redis
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory ${REDIS_MAXMEMORY}
+      --maxmemory-policy ${REDIS_MAXMEMORY_POLICY}
+      --appendonly ${REDIS_APPENDOLNLY}
+      --appendfsync ${REDIS_APPENDFSYNC}
+      # --save 900 1   # appendonly достаточно должно быть
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    networks:
+      redis_network:
+        ipv4_address: ${IP_REDIS}
+  
+volumes:
+  ollama_data:
+    external: true
+    name: wine_ollama_data
+  searxng-data:
+  # redis_data:
+
+networks:
+  redis_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_REDIS}
+  searxng_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_SEARXNG}
+  ollama_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_OLLAMA}
