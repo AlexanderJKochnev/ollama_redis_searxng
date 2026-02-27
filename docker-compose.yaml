@@ -89,7 +89,7 @@ volumes:
     external: true
     name: wine_ollama_data
   searxng-data:
-  # redis_data:
+  redis_data:
 
 networks:
   redis_network:
