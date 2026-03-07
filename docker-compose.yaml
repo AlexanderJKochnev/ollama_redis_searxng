@@ -9,13 +9,31 @@ services:
         max-file: ${MAX_FILE}
     image: ollama/ollama:latest
     hostname: ollama
+    environment:
+      # Включаем поддержку NVIDIA GPU
+      - NVIDIA_VISIBLE_DEVICES=all
+      # УСКОРЕНИЕ ДЛЯ QWEN 3.5 MoE (35B-A3B). ЭТО КЛЮЧЕВОЙ МОМЕНТ.
+      # Ставим 1, чтобы модель не пыталась обрабатывать запросы параллельно,
+      # что критически важно для архитектуры с большими буферами состояний [citation:2].
+      - OLLAMA_NUM_PARALLEL=1
+      # Сколько моделей держать в памяти одновременно. Оставляем 1 для стабильности.
+      - OLLAMA_MAX_LOADED_MODELS=1
+      # Как долго держать модель в памяти после последнего запроса.
+      # -1 означает "бесконечно", пока контейнер работает. Удобно, если вы постоянно работаете с одной моделью [citation:2].
+      - OLLAMA_KEEP_ALIVE=-1
+      # Тип KV-кэша. Пробуем q8_0 для экономии VRAM. Если будут проблемы с качеством, можно вернуть f16 [citation:2].
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+      # Включаем Flash Attention для ускорения [citation:2].
+      - OLLAMA_FLASH_ATTENTION=1
+      # Включаем отладку, чтобы видеть детальные логи при проблемах.
+      - OLLAMA_DEBUG=1
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [ gpu ]
+              capabilities: [gpu]
     volumes:
       - ollama_data:/root/.ollama
     networks:
