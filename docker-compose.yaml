@@ -15,18 +15,18 @@ services:
       # УСКОРЕНИЕ ДЛЯ QWEN 3.5 MoE (35B-A3B). ЭТО КЛЮЧЕВОЙ МОМЕНТ.
       # Ставим 1, чтобы модель не пыталась обрабатывать запросы параллельно,
       # что критически важно для архитектуры с большими буферами состояний [citation:2].
-      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_NUM_PARALLEL=${OLLAMA_NUM_PARALLEL}
       # Сколько моделей держать в памяти одновременно. Оставляем 1 для стабильности.
-      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_MAX_LOADED_MODELS=${OLLAMA_MAX_LOADED_MODELS}
       # Как долго держать модель в памяти после последнего запроса.
       # -1 означает "бесконечно", пока контейнер работает. Удобно, если вы постоянно работаете с одной моделью [citation:2].
-      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE}
       # Тип KV-кэша. Пробуем q8_0 для экономии VRAM. Если будут проблемы с качеством, можно вернуть f16 [citation:2].
-      - OLLAMA_KV_CACHE_TYPE=q8_0
+      - OLLAMA_KV_CACHE_TYPE=${OLLAMA_KV_CACHE_TYPE}
       # Включаем Flash Attention для ускорения [citation:2].
-      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION}
       # Включаем отладку, чтобы видеть детальные логи при проблемах.
-      - OLLAMA_DEBUG=1
+      - OLLAMA_DEBUG=${OLLAMA_DEBUG}
     deploy:
       resources:
         reservations:
